@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Canvas Maze</title>
+	</head>
+	<body>
+		<canvas id="canvas" width="400" height="400"></canvas>
+		<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+		<script>
+			/*var canvas = document.getElementById('canvas'),
+				c2d = canvas.getContext('2d'),
+				width = 400, height = 400, step = 10,
+				maze = [], mazeEmpty = [], mazeEmptyStr = [],
+				tmpSum = 0,
+				bufferOutline = [], bufferOutlineLast = [], bufferClean;
+			canvas.width = canvas.width;
+			for(i = 0, wd = width - step; i <= wd; i = i + step) {
+				var row = i / step;
+				if(!maze[row]) maze[row] = [];
+				for(j = 0, hd = height - step; j <= hd; j = j + step) {
+					col = j / step;
+					if(Math.random() > 0.73 || i == 0 || j == 0 || i == wd || j == hd) {
+						c2d.fillRect(i,j, step, step);
+						maze[row][col] = 1;
+					} else {
+						mazeEmpty.push([row,col]);
+						mazeEmptyStr.push([row,col].join());
+						maze[row][col] = 0;
+					};
+				};
+			};
+			var halfCountEmpty = Math.floor(mazeEmpty.length / 2);
+			while(mazeEmpty.length) {
+				var bufferTmp = [], tmpSum = 0;
+				if(bufferOutlineLast.length) {
+					for(i = 0, l = bufferOutlineLast.length; i < l; i++) {
+						try { bufferOutlineLast[i].join } catch(e) { console.log(mazeEmpty) };
+						var point = bufferOutlineLast[i],
+							strPoint = point.join(),
+							row = point[0],
+							col = point[1];
+						var _point, _strPoint;
+						if($.inArray(strPoint, bufferOutline) == -1) {
+							bufferOutline.push(strPoint);
+							var index = mazeEmptyStr.indexOf(strPoint);
+							mazeEmpty.splice(index, 1);
+							mazeEmptyStr.splice(index, 1);
+							c2d.fillStyle = 'green';
+							c2d.fillRect(row * step,col * step,step,step);
+							if(maze[row + 1][col] == 0) {
+								_point = [row + 1, col];
+								_strPoint = _point.join();
+								if($.inArray(_strPoint, bufferOutline) == -1) {
+									bufferTmp.push(_point);
+									tmpSum++;
+								};
+							};
+							if(maze[row - 1][col] == 0) {
+								_point = [row - 1, col];
+								_strPoint = _point.join();
+								if($.inArray(_strPoint, bufferOutline) == -1) {
+									bufferTmp.push(_point);
+									tmpSum++;
+								};
+							};
+							if(maze[row][col + 1] == 0) {
+								_point = [row, col + 1];
+								_strPoint = _point.join();
+								if($.inArray(_strPoint, bufferOutline) == -1) {
+									bufferTmp.push(_point);
+									tmpSum++;
+								};
+							};
+							if(maze[row][col - 1] == 0) {
+								_point = [row, col - 1];
+								_strPoint = _point.join();
+								if($.inArray(_strPoint, bufferOutline) == -1) {
+									bufferTmp.push(_point);
+									tmpSum++;
+								};
+							};
+							if(!tmpSum) {
+								c2d.fillStyle = 'black';
+								c2d.fillRect(row * step, col * step, step, step);
+							};
+						};
+					};
+					bufferOutlineLast = bufferTmp;
+				} else {
+					bufferOutlineLast.push(mazeEmpty[0]);
+					if(bufferOutline.length && bufferOutline.length < halfCountEmpty) {
+						c2d.fillStyle = 'black';
+						for(i = 0, l = bufferOutline.length; i < l; i++) {
+							var _point = bufferOutline[i].split(',');
+							c2d.fillRect(_point[0] * step, _point[1] * step, step, step);
+						};
+					};
+					bufferOutline = [];
+				};
+			};*/
+			
+			function Maze(userOptions) {
+				
+				var canvas, options;
+				var colors = {
+					wall: 'black',
+					empty: 'green',
+					fillEmpty: 'red'
+				};
+				
+				(function init() {
+					var defaultOptions = {
+						rows: 40,
+						cols: 40
+					};
+					function Options(initOptions) {
+						var options = initOptions || {};
+					};
+					Options.prototype = defaultOptions;
+					options = new Options(userOptions);
+				})();
+				
+				this.create = function() {
+					var canvas = createCanvas(),
+						width = canvas.width, height = canvas.height, step = canvas.step;
+					console.log(canvas);
+					var maze = [], // хранит весь лабиринт
+						mazeEmpty = [], mazeEmptyStr = [], // хранит пустые клетки
+						bufferOutline = [], bufferOutlineLast = []; // буфер клеток. для заливки контура
+					canvas = canvas.canvas;
+					canvas.width = canvas.width;
+					var c2d = canvas.getContext('2d');
+					
+					// отрисовываем начальный лабиринт. стандартный двойной цикл
+					c2d.fillStyle = colors.wall;
+					for(i = 0, wd = width - step; i <= wd; i = i + step) {
+						var row = i / step; // строка
+						if(!maze[row]) maze[row] = []; // добавляем строку если нет
+						for(j = 0, hd = height - step; j <= hd; j = j + step) {
+							col = j / step; // столбец
+							if(Math.random() > 0.73 || i == 0 || j == 0 || i == wd || j == hd) { // рисуем стенку
+								c2d.fillRect(i,j, step, step);
+								maze[row][col] = 1;
+							} else { // пустая клетка. запоминаем
+								mazeEmpty.push([row,col]);
+								mazeEmptyStr.push([row,col].join());
+								maze[row][col] = 0;
+							};
+						};
+					};
+					// у нас есть лабиринт. с большей вероятностью тут будут закрытые пустые клетки и небольшие контуры. надо их убрать
+					// halfCountEmpty определяет насколько большой контур будет отнесен к замкнутому и залит
+					// bufferOutline хранит все клетки контура
+					// bufferOutlineLast хранит только последние выбранные клетки
+					// изначально в bufferOutlineLast попадает первая пустая клетка из mazeEmpty, далее расходится волна
+					// когда исследован весь контур он заливается; либо не заливается (ваш кэп), т.к. имеет большой размер и соответственно является основным
+					// это происходит до тех пор пока не кончатся пустыйе клетки в mazeEmpty
+					var halfCountEmpty = Math.floor(mazeEmpty.length / 2);
+					while(mazeEmpty.length || bufferOutline.length) {
+						var bufferTmp = [], tmpSum = 0;
+						if(bufferOutlineLast.length) {
+							for(i = 0, l = bufferOutlineLast.length; i < l; i++) {
+								var point = bufferOutlineLast[i],
+									strPoint = point.join(),
+									row = point[0],
+									col = point[1];
+								var _point, _strPoint;
+								if($.inArray(strPoint, bufferOutline) == -1) {
+									bufferOutline.push(strPoint);
+									var index = mazeEmptyStr.indexOf(strPoint);
+									mazeEmpty.splice(index, 1);
+									mazeEmptyStr.splice(index, 1);
+									c2d.fillStyle = colors.empty;
+									c2d.fillRect(row * step,col * step,step,step);
+									
+									// получаем соседей
+									if(maze[row + 1][col] == 0) {
+										_point = [row + 1, col];
+										_strPoint = _point.join();
+										if($.inArray(_strPoint, bufferOutline) == -1) {
+											bufferTmp.push(_point);
+											tmpSum++;
+										};
+									};
+									if(maze[row - 1][col] == 0) {
+										_point = [row - 1, col];
+										_strPoint = _point.join();
+										if($.inArray(_strPoint, bufferOutline) == -1) {
+											bufferTmp.push(_point);
+											tmpSum++;
+										};
+									};
+									if(maze[row][col + 1] == 0) {
+										_point = [row, col + 1];
+										_strPoint = _point.join();
+										if($.inArray(_strPoint, bufferOutline) == -1) {
+											bufferTmp.push(_point);
+											tmpSum++;
+										};
+									};
+									if(maze[row][col - 1] == 0) {
+										_point = [row, col - 1];
+										_strPoint = _point.join();
+										if($.inArray(_strPoint, bufferOutline) == -1) {
+											bufferTmp.push(_point);
+											tmpSum++;
+										};
+									};
+									
+									if(!tmpSum) { // если у клетки нет ни одной пустой соседней - залить
+										c2d.fillStyle = colors.wall;
+										c2d.fillRect(row * step, col * step, step, step);
+									};
+								};
+							};
+							bufferOutlineLast = bufferTmp;
+						} else { // получаем клетку нового контура
+							bufferOutlineLast.push(mazeEmpty[0]);
+							// и заливаем старый при необходимости
+							if(bufferOutline.length && bufferOutline.length < halfCountEmpty) {
+								c2d.fillStyle = colors.fillEmpty;
+								for(i = 0, l = bufferOutline.length; i < l; i++) {
+									var _point = bufferOutline[i].split(',');
+									c2d.fillRect(_point[0] * step, _point[1] * step, step, step);
+								};
+							} else {
+								console.log(bufferOutline);
+							};
+							bufferOutline = []; // очищаем
+						};
+					};
+				};
+				
+				this.set = function(option, value) {
+					return opts[option] = value;
+				};
+				
+				this.get = function(option) {
+					return opts[option] ? opts[option] : false;
+				}
+				
+				function createCanvas() {
+					var w = $(window),
+						width = w.width(),
+						height = w.height(),
+						side = width > height ? height : width,
+						rows = options.rows,
+						cols = options.cols;
+					
+					if(rows !== cols) {
+						var hSide = Math.floor(side / cols) * cols,
+							vSide = Math.floor(side / rows) * rows;
+					} else {
+						var hSide = Math.floor(side / cols) * cols,
+							vSide = hSide;
+					};
+					
+					if($('#canvas').length) {
+						var canvas = document.getElementById('canvas');
+					} else {
+						var canvas = document.createElement('canvas');
+						canvas.id = 'canvas';
+					};
+					canvas.width = hSide;
+					canvas.height = vSide;
+					
+					return {
+						canvas: canvas,
+						width: hSide,
+						height: vSide,
+						rows: rows,
+						cols: cols,
+						step: hSide / cols
+					};
+				};
+			};
+		</script>
+	</body>
+</html>
